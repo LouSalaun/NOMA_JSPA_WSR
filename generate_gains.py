@@ -3,6 +3,11 @@
 Created on Mon Sep  5 14:56:35 2016
 
 @author: lsalaun
+
+© 2016 - 2020 Nokia
+Licensed under Creative Commons Attribution Non Commercial 4.0 International
+SPDX-License-Identifier: CC-BY-NC-4.0
+
 """
 
 import math

@@ -2,6 +2,10 @@
 
 A Python 3 implementation of the Joint Subcarrier and Power Allocation algorithms for WSR maximization in NOMA described in the following paper: [L. Salaün, M. Coupechoux, and C. S. Chen, "Joint Subcarrier and Power Allocation in NOMA: Optimal and Approximate Algorithms." IEEE Transactions on Signal Processing, vol. 68, pp.2215-2230, 2020](https://doi.org/10.1109/TSP.2020.2982786).
 
+© 2016 - 2020 Nokia
+Licensed under Creative Commons Attribution Non Commercial 4.0 International
+SPDX-License-Identifier: CC-BY-NC-4.0
+
 ## Getting started
 
 We first start by defining the following system parameters:

@@ -3,6 +3,11 @@
 Created on Thu Jul 26 14:11:15 2018
 
 @author: lsalaun
+
+© 2016 - 2020 Nokia
+Licensed under Creative Commons Attribution Non Commercial 4.0 International
+SPDX-License-Identifier: CC-BY-NC-4.0
+
 """
 
 import numpy as np

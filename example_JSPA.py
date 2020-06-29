@@ -111,11 +111,12 @@ print('Number of gradient iterations:',countIters)
 print('Number of SCUS evaluations performed:',countSCUS)
 
 # The following Grad_JSPA gives the same result but with larger running time since it uses the basic SCUS instead of SpeedUpSCUS
-#power, wsr, countIters = ca_jspa.Grad_JSPA(K,L,Multiplex,Pmax,N_G,pi,pi_inv,w,W,delta,rounding_step=0.01)
-#print()
-#print('WSR performance:',np.sum(wsr))
-#print('Power allocated to each subcarrier:',power)
-#print('Number of gradient iterations:',countIters)
+# power, wsr, countIters, countSCUS = ca_jspa.Grad_JSPA(K,L,Multiplex,Pmax,N_G,pi,pi_inv,w,W,delta,rounding_step=0.01)
+# print()
+# print('WSR performance:',np.sum(wsr))
+# print('Power allocated to each subcarrier:',power)
+# print('Number of gradient iterations:',countIters)
+# print('Number of SCUS evaluations performed:',countSCUS)
 
 print('\n----------------------- Grad_JSPA with delta = 0.001, without rounding -----------------------')
 # Error tolerance at termination
@@ -129,11 +130,12 @@ print('Number of gradient iterations:',countIters)
 print('Number of SCUS evaluations performed:',countSCUS)
 
 # The following Grad_JSPA gives the same result but with larger running time since it uses the basic SCUS instead of SpeedUpSCUS
-#power, wsr, countIters = ca_jspa.Grad_JSPA(K,L,Multiplex,Pmax,N_G,pi,pi_inv,w,W,delta,rounding_step=None)
-#print()
-#print('WSR performance:',np.sum(wsr))
-#print('Power allocated to each subcarrier:',power)
-#print('Number of gradient iterations:',countIters)
+# power, wsr, countIters, countSCUS = ca_jspa.Grad_JSPA(K,L,Multiplex,Pmax,N_G,pi,pi_inv,w,W,delta,rounding_step=None)
+# print()
+# print('WSR performance:',np.sum(wsr))
+# print('Power allocated to each subcarrier:',power)
+# print('Number of gradient iterations:',countIters)
+# print('Number of SCUS evaluations performed:',countSCUS)
 
 print('\n----------------------- eqPow_JSPA -----------------------')
 

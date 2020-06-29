@@ -644,6 +644,7 @@ def proj(P,Pmax):
     return P*Pmax/np.sum(P)
 
 # Grad_JSPA : multi-carrier power control -> projected gradient on top of SCUS
+# Backtracking line search is used to tune the step size at each iteration
 # l : current subcarrier
 # Pmax : total power budget
 # PmaxN : max power per subcarrier
@@ -660,11 +661,8 @@ def Grad_JSPA(K,L,Multiplex,Pmax,N_G,pi,pi_inv,w,W,delta,max_iters=100,rounding_
 
     # Projected gradient descent 
     previous_step_size = math.inf
-    max_iters = 100 # maximum number of iterations
-    iters = 0 #iteration counter
-    # Step length: well chosen fixed step length alpha performs well
-    # Backtracking line search can also be implemented but requires more computations
-    alpha = 0.1/np.max(W)/np.max(w) 
+    iters = 0       # Iteration counter
+    countSCUS = 0   # Number of SCUS calls  
     
     # cur_fun: function evaluation, cur_grad: gradient evaluation
     # best_fun: best value of the objective function found so far
@@ -679,12 +677,31 @@ def Grad_JSPA(K,L,Multiplex,Pmax,N_G,pi,pi_inv,w,W,delta,max_iters=100,rounding_
         res = fun_first2last(cur_x,K,L,Multiplex,N_G,pi,pi_inv,w,W)
         cur_fun = -res[0]
         cur_grad = -res[1]
+        countSCUS += L
 #        print(res)
         
         # Keep the best value and its variable
         if cur_fun > best_fun:
             best_fun = cur_fun
             best_x = cur_x
+            
+        # Backtracking line search until the Armijo–Goldstein condition is satisfied
+        m = np.dot(cur_grad,cur_grad)/np.linalg.norm(cur_grad,ord=1)
+        c = delta   # Armijo–Goldstein condition parameter
+        tau = 0.5   # alpha decreasing rate
+        # Initial step size in the backtracking line search method
+        alpha = Pmax*15 / np.linalg.norm(cur_grad,ord=1)
+        while True: 
+            test_x = proj( cur_x + alpha * cur_grad , Pmax)
+            res = fun_first2last(test_x,K,L,Multiplex,N_G,pi,pi_inv,w,W)
+            test_fun = -res[0]
+            countSCUS += L
+            if test_fun > cur_fun + alpha * c * m: # Terminate if the Armijo–Goldstein condition is satisfied
+                break
+            # Decrease alpha by a factor tau
+            alpha *= tau
+            if alpha * np.linalg.norm(cur_grad,ord=1) < delta: # Terminate if step is too small
+                break
         
         # Update cur_x along the gradient and project it on the feasible set
         prev_x = cur_x
@@ -696,6 +713,7 @@ def Grad_JSPA(K,L,Multiplex,Pmax,N_G,pi,pi_inv,w,W,delta,max_iters=100,rounding_
     # Evaluate the last point
     res = fun_first2last(cur_x,K,L,Multiplex,N_G,pi,pi_inv,w,W)
     cur_fun = -res[0]
+    countSCUS += L
     # Keep the best value and its variable
     if cur_fun > best_fun:
         best_fun = cur_fun
@@ -706,8 +724,9 @@ def Grad_JSPA(K,L,Multiplex,Pmax,N_G,pi,pi_inv,w,W,delta,max_iters=100,rounding_
         best_x = proc_rounding(best_x,Pmax,rounding_step)
 
     best_fun = F_Pvect_first2last(best_x,K,L,Multiplex,N_G,pi,pi_inv,w,W)
+    countSCUS += L
 
-    return best_x, best_fun, iters
+    return best_x, best_fun, iters, countSCUS
 
 # SpeedUp version of Grad_JSPA using SpeedUpSCUS
 def SpeedUp_Grad_JSPA(K,L,Multiplex,Pmax,N_G,pi,pi_inv,w,W,delta,max_iters=100,rounding_step=None):
@@ -720,10 +739,8 @@ def SpeedUp_Grad_JSPA(K,L,Multiplex,Pmax,N_G,pi,pi_inv,w,W,delta,max_iters=100,r
 
     # Projected gradient descent with backtracking line search
     previous_step_size = math.inf
-    iters = 0 #iteration counter
-    # Step length: well chosen fixed step length alpha performs well
-    # Backtracking line search can also be implemented but requires more computations
-    alpha = 0.1/np.max(W)/np.max(w) 
+    iters = 0       # Iteration counter
+    countSCUS = 0   # Number of SCUS calls  
     
     # cur_fun: function evaluation, cur_grad: gradient evaluation
     # best_fun: best value of the objective function found so far
@@ -738,22 +755,43 @@ def SpeedUp_Grad_JSPA(K,L,Multiplex,Pmax,N_G,pi,pi_inv,w,W,delta,max_iters=100,r
         res = fun_last2first(cur_x,suSCUS,K,L,Multiplex,N_G,pi,pi_inv,w,W)
         cur_fun = -res[0]
         cur_grad = -res[1]
+        countSCUS += L
         
         # Keep the best value and its variable
         if cur_fun > best_fun:
             best_fun = cur_fun
             best_x = cur_x
         
+        # Backtracking line search until the Armijo–Goldstein condition is satisfied
+        m = np.dot(cur_grad,cur_grad)/np.linalg.norm(cur_grad,ord=1)
+        c = delta   # Armijo–Goldstein condition parameter
+        tau = 0.5   # alpha decreasing rate
+        # Initial step size in the backtracking line search method
+        alpha = Pmax*15 / np.linalg.norm(cur_grad,ord=1)
+        while True: 
+            test_x = proj( cur_x + alpha * cur_grad , Pmax)
+            res = fun_last2first(test_x,suSCUS,K,L,Multiplex,N_G,pi,pi_inv,w,W)
+            test_fun = -res[0]
+            countSCUS += L
+            if test_fun > cur_fun + alpha * c * m: # Terminate if the Armijo–Goldstein condition is satisfied
+                break
+            # decrease alpha by a factor tau
+            alpha *= tau
+            if alpha * np.linalg.norm(cur_grad,ord=1) < delta: # Terminate if step is too small
+                break
+        
         # Update cur_x along the gradient
         prev_x = cur_x
         cur_x = proj( cur_x + alpha * cur_grad , Pmax)
 #        print(cur_x)
+        
         previous_step_size = np.linalg.norm(cur_x - prev_x,ord=1)
         iters+=1
 
     # Evaluate the last point
     res = fun_last2first(cur_x,suSCUS,K,L,Multiplex,N_G,pi,pi_inv,w,W)
     cur_fun = -res[0]
+    countSCUS += L
     # Keep the best value and its variable
     if cur_fun > best_fun:
         best_fun = cur_fun
@@ -766,8 +804,9 @@ def SpeedUp_Grad_JSPA(K,L,Multiplex,Pmax,N_G,pi,pi_inv,w,W,delta,max_iters=100,r
     best_fun = np.zeros((L,K))
     for lsub in range(L):
         _, _, best_fun[lsub] = suSCUS[lsub].speedUp_SCUS(best_x[lsub])
+    countSCUS += L
         
-    return best_x, np.transpose(best_fun), iters
+    return best_x, np.transpose(best_fun), iters, countSCUS
 
 # Basic heuristic which allocates equal power to each subcarrier
 def eqPow_JSPA(K,L,Multiplex,Pmax,N_G,pi,pi_inv,w,W):
